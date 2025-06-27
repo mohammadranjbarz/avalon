@@ -95,8 +95,8 @@
     <p id="votePrompt"></p>
     <button id="confirmVoteBtn" onclick="confirmReadyToVote()">بازیکن آماده رأی دادن است</button>
     <div id="voteButtons" class="hidden">
-      <button onclick="castVote('success')">Success</button>
-      <button onclick="castVote('fail')">Fail</button>
+      <button onclick="castVote('success')">✅ Success</button>
+      <button onclick="castVote('fail')">❌ Fail</button>
     </div>
   </div>
   <button id="showResultsBtn" class="hidden" onclick="showResults()">دیدن نتیجه رأی‌گیری</button>
@@ -149,7 +149,13 @@
   }
 
   function revealRole() {
-    document.getElementById('roleDisplay').textContent = `نقش شما: ${players[currentIndex]}`;
+    const role = players[currentIndex];
+    const evilRoles = ['Mordred', 'Assassin', 'Morgana', 'Oberon', 'Minion of Mordred'];
+    const goodRoles = ['Merlin', 'Percival', 'Loyal Servant of Arthur'];
+    let icon = '';
+    if (evilRoles.includes(role)) icon = '🟥';
+    if (goodRoles.includes(role)) icon = '🟦';
+    document.getElementById('roleDisplay').textContent = `نقش شما: ${role} ${icon}`;
     document.getElementById('nextPlayerBtn').classList.remove('hidden');
   }
 
@@ -213,7 +219,7 @@
   function showResults() {
     const failCount = votes.filter(v => v === 'fail').length;
     const successCount = votes.length - failCount;
-    document.getElementById('voteResult').textContent = `نتیجه مأموریت: ${successCount} موفق - ${failCount} شکست`;
+    document.getElementById('voteResult').textContent = `نتیجه مأموریت: ${successCount} ✅ موفق - ${failCount} ❌ شکست`;
     document.getElementById('nextMissionBtn').classList.remove('hidden');
   }
 
