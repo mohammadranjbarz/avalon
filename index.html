@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Avalon Game</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f7f7f7;
+      direction: rtl;
+    }
+    h2, h3 { margin: 16px 0 8px; }
+    .hidden { display: none; }
+    .center { text-align: center; }
+    button {
+      background-color: #2196f3;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 10px 0;
+    }
+    button:hover { background-color: #1976d2; }
+    label { display: block; margin-bottom: 8px; }
+    input[type="number"], select {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0 15px;
+      font-size: 16px;
+      background: white;
+      color: black;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    select option {
+      font-size: 16px;
+    }
+    #resetGame {
+      background-color: #f44336;
+    }
+    @media (max-width: 600px) {
+      body { padding: 10px; }
+      button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+<div id="setup">
+  <h2>چند نفر هستید؟</h2>
+  <select id="playerCount">
+    <option value="">انتخاب کنید</option>
+    <option value="5">5 نفر</option>
+    <option value="6">6 نفر</option>
+    <option value="7">7 نفر</option>
+    <option value="8">8 نفر</option>
+    <option value="9">9 نفر</option>
+    <option value="10">10 نفر</option>
+  </select>
+
+  <h2>نقش‌ها را انتخاب کنید:</h2>
+  <label><input type="checkbox" value="Merlin"> مرلین</label>
+  <label><input type="checkbox" value="Mordred"> موردرد</label>
+  <label><input type="checkbox" value="Assassin"> قاتل</label>
+  <label><input type="checkbox" value="Morgana"> مورگانا</label>
+  <label><input type="checkbox" value="Oberon"> اوبرون</label>
+  <label><input type="checkbox" value="Percival"> پرسیوال</label>
+
+  <h3>تعداد خدمتکارهای آرتور:</h3>
+  <input type="number" id="arthurCount" min="1" value="3">
+
+  <h3>تعداد یاران موردرد:</h3>
+  <input type="number" id="mordredMinionsCount" min="0" value="0">
+
+  <button onclick="startGame()">شروع بازی</button>
+</div>
+
+<div id="roleReveal" class="hidden center">
+  <h2 id="currentPlayer">نفر 1 برای دیدن نقش کلیک کند</h2>
+  <button onclick="revealRole()">دیدن نقش</button>
+  <p id="roleDisplay" style="font-size: 22px; margin-top: 20px;"></p>
+  <button class="hidden" id="nextPlayerBtn" onclick="nextPlayer()">پنهان کن و بده نفر بعدی</button>
+</div>
+
+<div id="votingPhase" class="hidden center">
+  <h2 id="missionTitle">مرحله مأموریت</h2>
+  <label>تعداد بازیکنان مأموریت: <input type="number" id="missionSize" min="1"></label>
+  <button onclick="startVoting()">شروع رأی‌گیری</button>
+  <div id="voteContainer" class="hidden">
+    <p id="votePrompt"></p>
+    <button id="confirmVoteBtn" onclick="confirmReadyToVote()">بازیکن آماده رأی دادن است</button>
+    <div id="voteButtons" class="hidden">
+      <button onclick="castVote('success')">Success</button>
+      <button onclick="castVote('fail')">Fail</button>
+    </div>
+  </div>
+  <button id="showResultsBtn" class="hidden" onclick="showResults()">دیدن نتیجه رأی‌گیری</button>
+  <div id="voteResult" style="margin-top: 20px;"></div>
+  <button id="nextMissionBtn" class="hidden" onclick="nextMission()">شروع مأموریت بعدی</button>
+</div>
+
+<div id="endGame" class="hidden center">
+  <h2>پایان بازی</h2>
+  <button id="resetGame" onclick="resetGame()">شروع دوباره</button>
+</div>
+
+<script>
+  let players = [];
+  let currentIndex = 0;
+  let votes = [];
+  let voteIndex = 0;
+  let currentMission = 1;
+  let currentVoteLimit = 0;
+
+  function startGame() {
+    const count = parseInt(document.getElementById('playerCount').value);
+    const arthurCount = parseInt(document.getElementById('arthurCount').value);
+    const evilCount = parseInt(document.getElementById('mordredMinionsCount').value);
+    const selectedRoles = [...document.querySelectorAll('input[type=checkbox]:checked')].map(c => c.value);
+
+    const fixedRoles = [...selectedRoles];
+    while (fixedRoles.filter(r => r === 'Loyal Servant of Arthur').length < arthurCount) {
+      fixedRoles.push('Loyal Servant of Arthur');
+    }
+    while (fixedRoles.filter(r => r === 'Minion of Mordred').length < evilCount) {
+      fixedRoles.push('Minion of Mordred');
+    }
+
+    if (fixedRoles.length !== count) {
+      alert('تعداد نقش‌ها با تعداد بازیکن نمی‌خواند');
+      return;
+    }
+
+    players = shuffle(fixedRoles);
+    document.getElementById('setup').classList.add('hidden');
+    document.getElementById('roleReveal').classList.remove('hidden');
+    updatePlayerText();
+  }
+
+  function updatePlayerText() {
+    document.getElementById('currentPlayer').textContent = `نفر ${currentIndex + 1} برای دیدن نقش کلیک کند`;
+    document.getElementById('roleDisplay').textContent = '';
+    document.getElementById('nextPlayerBtn').classList.add('hidden');
+  }
+
+  function revealRole() {
+    document.getElementById('roleDisplay').textContent = `نقش شما: ${players[currentIndex]}`;
+    document.getElementById('nextPlayerBtn').classList.remove('hidden');
+  }
+
+  function nextPlayer() {
+    currentIndex++;
+    if (currentIndex >= players.length) {
+      document.getElementById('roleReveal').classList.add('hidden');
+      document.getElementById('votingPhase').classList.remove('hidden');
+      updateMissionTitle();
+      return;
+    }
+    updatePlayerText();
+  }
+
+  function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+
+  function startVoting() {
+    const missionSize = parseInt(document.getElementById('missionSize').value);
+    if (!missionSize || missionSize > players.length) {
+      alert('تعداد افراد مأموریت نامعتبر است');
+      return;
+    }
+    votes = [];
+    voteIndex = 0;
+    currentVoteLimit = missionSize;
+    document.getElementById('voteContainer').classList.remove('hidden');
+    document.getElementById('voteResult').textContent = '';
+    document.getElementById('showResultsBtn').classList.add('hidden');
+    document.getElementById('nextMissionBtn').classList.add('hidden');
+    nextVote();
+  }
+
+  function nextVote() {
+    document.getElementById('voteButtons').classList.add('hidden');
+    document.getElementById('confirmVoteBtn').classList.remove('hidden');
+    if (voteIndex < currentVoteLimit) {
+      document.getElementById('votePrompt').textContent = `بازیکن ${voteIndex + 1} آماده رأی دادن است؟`;
+    } else {
+      document.getElementById('voteContainer').classList.add('hidden');
+      document.getElementById('showResultsBtn').classList.remove('hidden');
+    }
+  }
+
+  function confirmReadyToVote() {
+    document.getElementById('confirmVoteBtn').classList.add('hidden');
+    document.getElementById('voteButtons').classList.remove('hidden');
+  }
+
+  function castVote(result) {
+    votes.push(result);
+    voteIndex++;
+    nextVote();
+  }
+
+  function showResults() {
+    const failCount = votes.filter(v => v === 'fail').length;
+    const successCount = votes.length - failCount;
+    document.getElementById('voteResult').textContent = `نتیجه مأموریت: ${successCount} موفق - ${failCount} شکست`;
+    document.getElementById('nextMissionBtn').classList.remove('hidden');
+  }
+
+  function nextMission() {
+    currentMission++;
+    if (currentMission > 5) {
+      document.getElementById('votingPhase').classList.add('hidden');
+      document.getElementById('endGame').classList.remove('hidden');
+    } else {
+      updateMissionTitle();
+      document.getElementById('voteContainer').classList.add('hidden');
+      document.getElementById('showResultsBtn').classList.add('hidden');
+      document.getElementById('voteResult').textContent = '';
+      document.getElementById('missionSize').value = '';
+    }
+  }
+
+  function updateMissionTitle() {
+    document.getElementById('missionTitle').textContent = `مرحله مأموریت ${currentMission}`;
+  }
+
+  function resetGame() {
+    location.reload();
+  }
+</script>
+</body>
+</html>
