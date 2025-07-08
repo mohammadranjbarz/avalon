@@ -52,29 +52,21 @@
 </head>
 <body>
 <div id="setup">
-  <h2>چند نفر هستید؟</h2>
-  <select id="playerCount">
-    <option value="">انتخاب کنید</option>
-    <option value="5">5 نفر</option>
-    <option value="6">6 نفر</option>
-    <option value="7">7 نفر</option>
-    <option value="8">8 نفر</option>
-    <option value="9">9 نفر</option>
-    <option value="10">10 نفر</option>
-  </select>
+  <label>چند نفر هستید؟ <input type="number" id="playerCount" min="7" max="12" value="10"></label>
+
 
   <h2>نقش‌ها را انتخاب کنید:</h2>
-  <label><input type="checkbox" value="Merlin"> مرلین</label>
-  <label><input type="checkbox" value="Mordred"> موردرد</label>
-  <label><input type="checkbox" value="Assassin"> قاتل</label>
-  <label><input type="checkbox" value="Morgana"> مورگانا</label>
-  <label><input type="checkbox" value="Oberon"> اوبرون</label>
-  <label><input type="checkbox" value="Percival"> پرسیوال</label>
+  <label><input type="checkbox" value="Merlin" checked="checked">مرلین 🟦 </label>
+  <label><input type="checkbox" value="Mordred" checked="checked">موردرد 🟥</label>
+  <label><input type="checkbox" value="Assassin" checked="checked">قاتل 🟥</label>
+  <label><input type="checkbox" value="Morgana" checked="checked">مورگانا 🟥</label>
+  <label><input type="checkbox" value="Oberon" checked="checked">اوبرون 🟥</label>
+  <label><input type="checkbox" value="Percival" checked="checked">پرسیوال 🟦</label>
 
-  <h3>تعداد خدمتکارهای آرتور:</h3>
-  <input type="number" id="arthurCount" min="1" value="3">
+  <h3>تعداد خدمتکارهای آرتور: 🟦</h3>
+  <input type="number" id="arthurCount" min="1" value="4">
 
-  <h3>تعداد یاران موردرد:</h3>
+  <h3>تعداد یاران موردرد: 🟥</h3>
   <input type="number" id="mordredMinionsCount" min="0" value="0">
 
   <button onclick="startGame()">شروع بازی</button>
@@ -89,8 +81,8 @@
 
 <div id="votingPhase" class="hidden center">
   <h2 id="missionTitle">مرحله مأموریت</h2>
-  <label>تعداد بازیکنان مأموریت: <input type="number" id="missionSize" min="1"></label>
-  <button onclick="startVoting()">شروع رأی‌گیری</button>
+  <label>تعداد بازیکنان مأموریت: <input type="number" id="missionSize" min="2" max="5" value="3"></label>
+  <button id="startVotingBtn" onclick="startVoting()">شروع رأی‌گیری</button>
   <div id="voteContainer" class="hidden">
     <p id="votePrompt"></p>
     <button id="confirmVoteBtn" onclick="confirmReadyToVote()">بازیکن آماده رأی دادن است</button>
@@ -188,6 +180,7 @@
     voteIndex = 0;
     currentVoteLimit = missionSize;
     document.getElementById('voteContainer').classList.remove('hidden');
+    document.getElementById('startVotingBtn').hidden = true;
     document.getElementById('voteResult').textContent = '';
     document.getElementById('showResultsBtn').classList.add('hidden');
     document.getElementById('nextMissionBtn').classList.add('hidden');
@@ -224,6 +217,7 @@
   }
 
   function nextMission() {
+    document.getElementById('startVotingBtn').hidden = false;
     currentMission++;
     if (currentMission > 5) {
       document.getElementById('votingPhase').classList.add('hidden');
