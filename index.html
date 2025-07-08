@@ -24,7 +24,7 @@
       border-radius: 8px;
       font-size: 16px;
       cursor: pointer;
-      margin: 10px 0;
+      margin: 10px 5px;
     }
     button:hover { background-color: #1976d2; }
     label { display: block; margin-bottom: 8px; }
@@ -38,11 +38,13 @@
       border: 1px solid #ccc;
       border-radius: 4px;
     }
-    select option {
-      font-size: 16px;
-    }
     #resetGame {
       background-color: #f44336;
+    }
+    #samanthaSection button {
+      font-size: 14px;
+      margin: 5px;
+      padding: 6px 12px;
     }
     @media (max-width: 600px) {
       body { padding: 10px; }
@@ -51,27 +53,25 @@
   </style>
 </head>
 <body>
+
+<!-- Setup -->
 <div id="setup">
   <label>چند نفر هستید؟ <input type="number" id="playerCount" min="7" max="12" value="10"></label>
-
-
   <h2>نقش‌ها را انتخاب کنید:</h2>
-  <label><input type="checkbox" value="Merlin" checked="checked">مرلین 🟦 </label>
-  <label><input type="checkbox" value="Mordred" checked="checked">موردرد 🟥</label>
-  <label><input type="checkbox" value="Assassin" checked="checked">قاتل 🟥</label>
-  <label><input type="checkbox" value="Morgana" checked="checked">مورگانا 🟥</label>
-  <label><input type="checkbox" value="Oberon" checked="checked">اوبرون 🟥</label>
-  <label><input type="checkbox" value="Percival" checked="checked">پرسیوال 🟦</label>
-
+  <label><input type="checkbox" value="Merlin" checked>مرلین 🟦 </label>
+  <label><input type="checkbox" value="Mordred" checked>موردرد 🟥</label>
+  <label><input type="checkbox" value="Assassin" checked>قاتل 🟥</label>
+  <label><input type="checkbox" value="Morgana" checked>مورگانا 🟥</label>
+  <label><input type="checkbox" value="Oberon" checked>اوبرون 🟥</label>
+  <label><input type="checkbox" value="Percival" checked>پرسیوال 🟦</label>
   <h3>تعداد خدمتکارهای آرتور: 🟦</h3>
   <input type="number" id="arthurCount" min="1" value="4">
-
   <h3>تعداد یاران موردرد: 🟥</h3>
   <input type="number" id="mordredMinionsCount" min="0" value="0">
-
   <button onclick="startGame()">شروع بازی</button>
 </div>
 
+<!-- Role Reveal -->
 <div id="roleReveal" class="hidden center">
   <h2 id="currentPlayer">نفر 1 برای دیدن نقش کلیک کند</h2>
   <button onclick="revealRole()">دیدن نقش</button>
@@ -79,10 +79,12 @@
   <button class="hidden" id="nextPlayerBtn" onclick="nextPlayer()">پنهان کن و بده نفر بعدی</button>
 </div>
 
+<!-- Voting Phase -->
 <div id="votingPhase" class="hidden center">
   <h2 id="missionTitle">مرحله مأموریت</h2>
   <label>تعداد بازیکنان مأموریت: <input type="number" id="missionSize" min="2" max="5" value="3"></label>
   <button id="startVotingBtn" onclick="startVoting()">شروع رأی‌گیری</button>
+
   <div id="voteContainer" class="hidden">
     <p id="votePrompt"></p>
     <button id="confirmVoteBtn" onclick="confirmReadyToVote()">بازیکن آماده رأی دادن است</button>
@@ -91,42 +93,49 @@
       <button onclick="castVote('fail')">❌ Fail</button>
     </div>
   </div>
+
+  <!-- Samantha Section -->
+  <div id="samanthaSection" style="margin-top: 20px;">
+    <button id="samanthaBtn" onclick="showSamanthaChoices()">سامانتا 👤</button>
+    <div id="samanthaChoices" class="hidden">
+      <button onclick="selectSamantha('شهر 🟦')">شهر 🟦</button>
+      <button onclick="selectSamantha('مافیا 🟥')">مافیا 🟥</button>
+    </div>
+    <button id="samanthaRevealBtn" class="hidden" onclick="revealSamantha()">نمایش نقش</button>
+    <p id="samanthaResult" style="margin-top: 10px;"></p>
+    <button id="samanthaResetBtn" class="hidden" onclick="resetSamantha()">ریست سامانتا</button>
+  </div>
+
   <button id="showResultsBtn" class="hidden" onclick="showResults()">دیدن نتیجه رأی‌گیری</button>
   <div id="voteResult" style="margin-top: 20px;"></div>
   <button id="nextMissionBtn" class="hidden" onclick="nextMission()">شروع مأموریت بعدی</button>
+  <button id="endGameBtn" class="hidden" onclick="confirmEndGame()">پایان بازی</button>
 </div>
 
+<!-- End Game -->
 <div id="endGame" class="hidden center">
   <h2>پایان بازی</h2>
+  <p id="playersList" style="white-space: pre-wrap; text-align: right;"></p>
   <button id="resetGame" onclick="resetGame()">شروع دوباره</button>
 </div>
 
 <script>
-  let players = [];
-  let currentIndex = 0;
-  let votes = [];
-  let voteIndex = 0;
-  let currentMission = 1;
-  let currentVoteLimit = 0;
+  let players = [], currentIndex = 0, votes = [], voteIndex = 0, currentMission = 1, currentVoteLimit = 0;
+  let samanthaPick = '';
 
   function startGame() {
-    const count = parseInt(document.getElementById('playerCount').value);
-    const arthurCount = parseInt(document.getElementById('arthurCount').value);
-    const evilCount = parseInt(document.getElementById('mordredMinionsCount').value);
+    const count = +document.getElementById('playerCount').value;
+    const arthurCount = +document.getElementById('arthurCount').value;
+    const evilCount = +document.getElementById('mordredMinionsCount').value;
     const selectedRoles = [...document.querySelectorAll('input[type=checkbox]:checked')].map(c => c.value);
-
     const fixedRoles = [...selectedRoles];
-    while (fixedRoles.filter(r => r === 'Loyal Servant of Arthur').length < arthurCount) {
-      fixedRoles.push('Loyal Servant of Arthur');
-    }
-    while (fixedRoles.filter(r => r === 'Minion of Mordred').length < evilCount) {
-      fixedRoles.push('Minion of Mordred');
-    }
 
-    if (fixedRoles.length !== count) {
-      alert('تعداد نقش‌ها با تعداد بازیکن نمی‌خواند');
-      return;
-    }
+    while (fixedRoles.filter(r => r === 'Loyal Servant of Arthur').length < arthurCount)
+      fixedRoles.push('Loyal Servant of Arthur');
+    while (fixedRoles.filter(r => r === 'Minion of Mordred').length < evilCount)
+      fixedRoles.push('Minion of Mordred');
+
+    if (fixedRoles.length !== count) return alert('تعداد نقش‌ها با تعداد بازیکن نمی‌خواند');
 
     players = shuffle(fixedRoles);
     document.getElementById('setup').classList.add('hidden');
@@ -142,11 +151,7 @@
 
   function revealRole() {
     const role = players[currentIndex];
-    const evilRoles = ['Mordred', 'Assassin', 'Morgana', 'Oberon', 'Minion of Mordred'];
-    const goodRoles = ['Merlin', 'Percival', 'Loyal Servant of Arthur'];
-    let icon = '';
-    if (evilRoles.includes(role)) icon = '🟥';
-    if (goodRoles.includes(role)) icon = '🟦';
+    const icon = ['Mordred', 'Assassin', 'Morgana', 'Oberon', 'Minion of Mordred'].includes(role) ? '🟥' : '🟦';
     document.getElementById('roleDisplay').textContent = `نقش شما: ${role} ${icon}`;
     document.getElementById('nextPlayerBtn').classList.remove('hidden');
   }
@@ -171,28 +176,27 @@
   }
 
   function startVoting() {
-    const missionSize = parseInt(document.getElementById('missionSize').value);
-    if (!missionSize || missionSize > players.length) {
-      alert('تعداد افراد مأموریت نامعتبر است');
-      return;
-    }
-    votes = [];
-    voteIndex = 0;
-    currentVoteLimit = missionSize;
+    const missionSize = +document.getElementById('missionSize').value;
+    if (!missionSize || missionSize > players.length)
+      return alert('تعداد افراد مأموریت نامعتبر است');
+
+    votes = []; voteIndex = 0; currentVoteLimit = missionSize;
     document.getElementById('voteContainer').classList.remove('hidden');
     document.getElementById('startVotingBtn').hidden = true;
     document.getElementById('voteResult').textContent = '';
     document.getElementById('showResultsBtn').classList.add('hidden');
     document.getElementById('nextMissionBtn').classList.add('hidden');
+    document.getElementById('endGameBtn').classList.add('hidden');
+    resetSamantha();
     nextVote();
   }
 
   function nextVote() {
     document.getElementById('voteButtons').classList.add('hidden');
     document.getElementById('confirmVoteBtn').classList.remove('hidden');
-    if (voteIndex < currentVoteLimit) {
+    if (voteIndex < currentVoteLimit)
       document.getElementById('votePrompt').textContent = `بازیکن ${voteIndex + 1} آماده رأی دادن است؟`;
-    } else {
+    else {
       document.getElementById('voteContainer').classList.add('hidden');
       document.getElementById('showResultsBtn').classList.remove('hidden');
     }
@@ -214,29 +218,64 @@
     const successCount = votes.length - failCount;
     document.getElementById('voteResult').textContent = `نتیجه مأموریت: ${successCount} ✅ موفق - ${failCount} ❌ شکست`;
     document.getElementById('nextMissionBtn').classList.remove('hidden');
+    if (currentMission >= 5) document.getElementById('endGameBtn').classList.remove('hidden');
   }
 
   function nextMission() {
-    document.getElementById('startVotingBtn').hidden = false;
     currentMission++;
-    if (currentMission > 5) {
-      document.getElementById('votingPhase').classList.add('hidden');
-      document.getElementById('endGame').classList.remove('hidden');
-    } else {
-      updateMissionTitle();
-      document.getElementById('voteContainer').classList.add('hidden');
-      document.getElementById('showResultsBtn').classList.add('hidden');
-      document.getElementById('voteResult').textContent = '';
-      document.getElementById('missionSize').value = '';
-    }
+    updateMissionTitle();
+    document.getElementById('startVotingBtn').hidden = false;
+    document.getElementById('missionSize').value = 3;
+    document.getElementById('voteResult').textContent = '';
+    document.getElementById('voteContainer').classList.add('hidden');
+    document.getElementById('showResultsBtn').classList.add('hidden');
+    document.getElementById('nextMissionBtn').classList.add('hidden');
+    document.getElementById('endGameBtn').classList.add('hidden');
+    resetSamantha();
   }
 
   function updateMissionTitle() {
     document.getElementById('missionTitle').textContent = `مرحله مأموریت ${currentMission}`;
   }
 
+  function confirmEndGame() {
+    if (confirm('آیا مطمئن هستید که می‌خواهید بازی را به پایان برسانید؟')) {
+      document.getElementById('votingPhase').classList.add('hidden');
+      document.getElementById('endGame').classList.remove('hidden');
+      document.getElementById('playersList').textContent =
+              players.map((r, i) => `بازیکن ${i + 1}: ${r}`).join('\n');
+    }
+  }
+
   function resetGame() {
     location.reload();
+  }
+
+  // 🧠 سامانتا منطق جدید
+  function showSamanthaChoices() {
+    document.getElementById('samanthaBtn').classList.add('hidden');
+    document.getElementById('samanthaChoices').classList.remove('hidden');
+  }
+
+  function selectSamantha(choice) {
+    samanthaPick = choice;
+    document.getElementById('samanthaChoices').classList.add('hidden');
+    document.getElementById('samanthaRevealBtn').classList.remove('hidden');
+  }
+
+  function revealSamantha() {
+    document.getElementById('samanthaRevealBtn').classList.add('hidden');
+    document.getElementById('samanthaResult').textContent = `نقش سامانتا: ${samanthaPick}`;
+    document.getElementById('samanthaResetBtn').classList.remove('hidden');
+  }
+
+  function resetSamantha() {
+    samanthaPick = '';
+    document.getElementById('samanthaBtn').classList.remove('hidden');
+    document.getElementById('samanthaChoices').classList.add('hidden');
+    document.getElementById('samanthaRevealBtn').classList.add('hidden');
+    document.getElementById('samanthaResult').textContent = '';
+    document.getElementById('samanthaResetBtn').classList.add('hidden');
   }
 </script>
 </body>
