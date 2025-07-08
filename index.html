@@ -38,24 +38,53 @@
       border: 1px solid #ccc;
       border-radius: 4px;
     }
-    #resetGame {
-      background-color: #f44336;
+    #resetGame { background-color: #f44336; }
+    #roleInfoModal {
+      position: fixed;
+      top: 0; right: 0; bottom: 0; left: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 1000;
     }
-    #samanthaSection button {
-      font-size: 14px;
-      margin: 5px;
-      padding: 6px 12px;
+    #roleInfoContent {
+      background: white;
+      padding: 20px;
+      max-width: 800px;
+      margin: 50px auto;
+      border-radius: 10px;
+      position: relative;
+      direction: rtl;
+      overflow-y: auto;
+      max-height: 90vh;
     }
-    @media (max-width: 600px) {
-      body { padding: 10px; }
-      button { width: 100%; }
+    #roleInfoContent table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    #roleInfoContent th, #roleInfoContent td {
+      border: 1px solid #ccc;
+      padding: 6px 10px;
+      text-align: right;
+    }
+    #roleInfoContent th {
+      background: #eee;
+    }
+    .close-btn {
+      position: absolute;
+      left: 10px;
+      top: 10px;
+      background: transparent;
+      border: none;
+      font-size: 24px;
+      color: #444;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
 
-<!-- Setup -->
 <div id="setup">
+  <button onclick="showRoleInfo()">📜 معرفی نقش‌ها</button>
   <label>چند نفر هستید؟ <input type="number" id="playerCount" min="7" max="12" value="10"></label>
   <h2>نقش‌ها را انتخاب کنید:</h2>
   <label><input type="checkbox" value="Merlin" checked>مرلین 🟦 </label>
@@ -71,7 +100,62 @@
   <button onclick="startGame()">شروع بازی</button>
 </div>
 
-<!-- Role Reveal -->
+<!-- Modal معرفی نقش‌ها -->
+<div id="roleInfoModal" class="hidden">
+  <div id="roleInfoContent">
+    <button class="close-btn" onclick="closeRoleInfo()">×</button>
+    <h2>📜 معرفی نقش‌ها در بازی آوالون</h2>
+
+    <h3>🟦 جناح خیر</h3>
+    <ul>
+      <li><strong>مرلین:</strong> هویت همه‌ی افراد شر (به جز موردرد) را می‌داند. نباید فاش شود.</li>
+      <li><strong>پرسیوال:</strong> می‌داند یکی از دو نفر مرلین است. باید از او محافظت کند.</li>
+      <li><strong>خدمتکار وفادار آرتور:</strong> نقش ساده، بدون اطلاعات خاص.</li>
+    </ul>
+
+    <h3>🟥 جناح شر</h3>
+    <ul>
+      <li><strong>موردرد:</strong> مرلین او را نمی‌بیند. عضو شر مخفی.</li>
+      <li><strong>مورگانا:</strong> خودش را شبیه مرلین نشان می‌دهد تا پرسیوال را گمراه کند.</li>
+      <li><strong>قاتل:</strong> اگر خیرها ببرند، مرلین را بکشد، شرها پیروزند.</li>
+      <li><strong>اوبرون:</strong> عضو شر که هویت دیگران را نمی‌داند و آن‌ها نیز او را نمی‌شناسند.</li>
+    </ul>
+
+    <h3>👤 سامانتا</h3>
+    <p>در نسخه‌های غیررسمی حضور دارد. در شب می‌تواند جناح یکی از بازیکنان را بپرسد (خیر یا شر).</p>
+
+    <h3>🌙 شب بازی</h3>
+    <table>
+      <thead>
+      <tr><th>نقش</th><th>چه کسی را می‌بیند؟</th><th>توسط چه کسی دیده می‌شود؟</th></tr>
+      </thead>
+      <tbody>
+      <tr><td>مرلین</td><td>تمام شرورها (به جز موردرد)</td><td>پرسیوال</td></tr>
+      <tr><td>پرسیوال</td><td>مرلین و مورگانا (هردو)</td><td>-</td></tr>
+      <tr><td>یاران شر</td><td>همدیگر را (اوبرون نه)</td><td>مرلین (به جز موردرد)</td></tr>
+      <tr><td>موردرد</td><td>یاران شر</td><td>مرلین نمی‌بیند</td></tr>
+      <tr><td>مورگانا</td><td>تیم شر</td><td>برای پرسیوال مثل مرلین ظاهر می‌شود</td></tr>
+      <tr><td>اوبرون</td><td>هیچ‌کس</td><td>هیچ‌کس او را نمی‌بیند</td></tr>
+      <tr><td>سامانتا</td><td>یک نفر (و جناحش)</td><td>-</td></tr>
+      </tbody>
+    </table>
+    <h3>🏰 افسانه‌ی آرتور و قهرمانان و خیانتکارانش</h3>
+    <p>
+      در دل افسانه‌های باستانی بریتانیا، شاه آرتور پادشاهی نیک‌نهاد و دادگر بود که با کمک مرلین، جادوگر خردمند و رازدان، «میز گرد» را بنیان نهاد.
+      مرلین با بینش فراطبیعی‌اش از نیکی و شر آگاه بود، اما نمی‌توانست همه چیز را فاش کند.
+      در کنارش، <strong>پرسیوال</strong> شوالیه‌ای وفادار بود که باید مرلین را از خطر دشمنان پنهان نگه می‌داشت — هرچند مورگانا، استاد فریب، تهدیدی بزرگ بود.
+
+      در سوی تاریک داستان، <strong>موردرد</strong> ایستاده بود؛ فرزند نامشروع شاه آرتور و خواهر ناتنی‌اش مورگانا.
+      او تجسم خیانت بود؛ کسی که تقدیرش در سقوط پادشاهی رقم خورده بود.
+      <Strong>مورگانا</strong>، جادوگر و زن دوچهره‌ای بود که میان نیکی و شر در نوسان بود و نقاب‌ها را استادانه به چهره می‌زد.
+      در سایه‌ها، <strong>اوبرون</strong>، موجودی ناشناخته و خاموش، چنان پنهان بود که حتی یاران شر نیز او را نمی‌شناختند.
+      و <strong>سامانتا</strong>، شخصیتی مرموز در نسخه‌های غیررسمی بازی، همچون زنی فریبنده است که شبانه، راز جناح بازیکنی را درک می‌کند...
+
+      این افسانه‌ها، پایه‌گذار دنیای بازی آوالون‌اند؛ جایی که نیکی و پلیدی، در قالب بازیگران، بر سر سرنوشت پادشاهی نبرد می‌کنند.
+    </p>
+
+  </div>
+</div>
 <div id="roleReveal" class="hidden center">
   <h2 id="currentPlayer">نفر 1 برای دیدن نقش کلیک کند</h2>
   <button onclick="revealRole()">دیدن نقش</button>
@@ -79,7 +163,6 @@
   <button class="hidden" id="nextPlayerBtn" onclick="nextPlayer()">پنهان کن و بده نفر بعدی</button>
 </div>
 
-<!-- Voting Phase -->
 <div id="votingPhase" class="hidden center">
   <h2 id="missionTitle">مرحله مأموریت</h2>
   <label>تعداد بازیکنان مأموریت: <input type="number" id="missionSize" min="2" max="5" value="3"></label>
@@ -89,8 +172,8 @@
     <p id="votePrompt"></p>
     <button id="confirmVoteBtn" onclick="confirmReadyToVote()">بازیکن آماده رأی دادن است</button>
     <div id="voteButtons" class="hidden">
-      <button onclick="castVote('success')">✅ Success</button>
-      <button onclick="castVote('fail')">❌ Fail</button>
+      <button onclick="castVote('success')">✅ موفق</button>
+      <button onclick="castVote('fail')">❌ شکست</button>
     </div>
   </div>
 
@@ -106,19 +189,19 @@
     <button id="samanthaResetBtn" class="hidden" onclick="resetSamantha()">ریست سامانتا</button>
   </div>
 
-  <button id="showResultsBtn" class="hidden" onclick="showResults()">دیدن نتیجه رأی‌گیری</button>
+  <button id="showResultsBtn" class="hidden" onclick="showResults()">دیدن نتیجه مأموریت</button>
   <div id="voteResult" style="margin-top: 20px;"></div>
   <button id="nextMissionBtn" class="hidden" onclick="nextMission()">شروع مأموریت بعدی</button>
   <button id="endGameBtn" class="hidden" onclick="confirmEndGame()">پایان بازی</button>
 </div>
 
-<!-- End Game -->
 <div id="endGame" class="hidden center">
   <h2>پایان بازی</h2>
   <p id="playersList" style="white-space: pre-wrap; text-align: right;"></p>
   <button id="resetGame" onclick="resetGame()">شروع دوباره</button>
 </div>
 
+<!-- Scripts -->
 <script>
   let players = [], currentIndex = 0, votes = [], voteIndex = 0, currentMission = 1, currentVoteLimit = 0;
   let samanthaPick = '';
@@ -251,7 +334,7 @@
     location.reload();
   }
 
-  // 🧠 سامانتا منطق جدید
+  // سامانتا
   function showSamanthaChoices() {
     document.getElementById('samanthaBtn').classList.add('hidden');
     document.getElementById('samanthaChoices').classList.remove('hidden');
@@ -276,6 +359,14 @@
     document.getElementById('samanthaRevealBtn').classList.add('hidden');
     document.getElementById('samanthaResult').textContent = '';
     document.getElementById('samanthaResetBtn').classList.add('hidden');
+  }
+
+  function showRoleInfo() {
+    document.getElementById('roleInfoModal').classList.remove('hidden');
+  }
+
+  function closeRoleInfo() {
+    document.getElementById('roleInfoModal').classList.add('hidden');
   }
 </script>
 </body>
